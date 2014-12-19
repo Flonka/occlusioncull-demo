@@ -6,7 +6,9 @@ require([
 	'goo/entities/GooRunner',
 	'goo/entities/EntityUtils',
 	'goo/renderer/light/DirectionalLight',
-	'goo/renderer/Camera'
+	'goo/renderer/Camera',
+	'goo/scripts/Scripts',
+	'goo/entities/components/ScriptComponent'
 ], function (
 	Box,
 	Material,
@@ -15,7 +17,9 @@ require([
 	GooRunner,
 	EntityUtils,
 	DirectionalLight,
-	Camera
+	Camera,
+	Scripts,
+	ScriptComponent
 	) {
 
 	'use strict';
@@ -40,11 +44,21 @@ require([
 
 	box1.addToWorld();
 
-	world.createEntity(new DirectionalLight(), [0, 100, 0]).addToWorld();
+	var sun = world.createEntity(new DirectionalLight(new Vector3(1, 1, 1)), [0, 100, 0]);
+	sun.setRotation([-45, 45, 0]);
+	sun.addToWorld();
 
 	var camera = new Camera();
 	camera.lookAt(Vector3.ZERO, Vector3.UNIT_Y);
 	var camEntity = world.createEntity(camera, [0, 3, 10]);
+
+	var script = Scripts.create('OrbitNPanControlScript');
+
+	// camera control set up
+	var scriptComponent = new ScriptComponent();
+	scriptComponent.scripts.push(script);
+	camEntity.setComponent(scriptComponent);
+
 	camEntity.addToWorld();
 
 	goo.startGameLoop();
