@@ -1,40 +1,18 @@
 require([
-	'goo/shapes/Box',
-	'goo/renderer/Material',
-	'goo/renderer/shaders/ShaderLib',
-	'goo/math/Vector3',
 	'goo/entities/GooRunner',
-	'goo/entities/EntityUtils',
-	'goo/renderer/light/DirectionalLight',
-	'goo/renderer/Camera',
-	'goo/scripts/Scripts',
-	'goo/entities/components/ScriptComponent',
-	'goo/scripts/ScriptUtils',
-
 	'goo/occlusionpack/OcclusionPartitioner',
-	'goo/occlusionpack/OccludeeComponent',
-	'goo/occlusionpack/OccluderComponent'
+	'demo/DemoWorld',
+	'goo/scripts/ScriptUtils'
 ], function (
-	Box,
-	Material,
-	ShaderLib,
-	Vector3,
 	GooRunner,
-	EntityUtils,
-	DirectionalLight,
-	Camera,
-	Scripts,
-	ScriptComponent,
-	ScriptUtils,
-
 	OcclusionPartitioner,
-	OccludeeComponent,
-	OccluderComponent
+	DemoWorld,
+	ScriptUtils
 	) {
 
 	'use strict';
 
-	var DEBUG = true;
+	var DEBUG = false;
 	var DEBUG_CANVAS_ID = 'debugcanvas'
 
 	var occlusionPartitioner, defaultPartitioner, occlusionCullingEnabled;
@@ -51,44 +29,15 @@ require([
 	goo.renderer.domElement.id = 'goo';
 	document.body.appendChild(goo.renderer.domElement);
 
-	var world = goo.world;
-	var boxSize = 12
-	var boxMesh = new Box(boxSize, boxSize * 2, boxSize);
-	var material = new Material(ShaderLib.simpleLit);
-	material.wireframe = false;
+	var demoWorld = new DemoWorld(goo.world);
 
-	var rows = 20;
-	var cols = rows;
-	var offset = boxSize * 2.3;
-	for (var x = 0; x < rows; x++) {
-		for (var z = 0; z < cols; z++) {
-			var box = world.createEntity(boxMesh, material, [x * offset, 0, z * offset]);
-			var boxMeshData = box.meshDataComponent.meshData;
-			box.setComponent(new OccludeeComponent(boxMeshData, true));
-			box.setComponent(new OccluderComponent(boxMeshData));
-			box.addToWorld();
-		}
-	}
-
-	var sun = world.createEntity(new DirectionalLight(new Vector3(1, 1, 1)), [0, 100, 0]);
-	sun.setRotation([-45, 45, 0]);
-	sun.addToWorld();
-
-	var camera = new Camera(90, 1, 0.1, 1000);
-	camera.lookAt(Vector3.ZERO, Vector3.UNIT_Y);
-	var camEntity = world.createEntity(camera, [0, 0, 10]);
-	var scriptComponent = new ScriptComponent();
-	console.debug("Available scripts: ", Scripts.allScripts());
-	scriptComponent.scripts.push(Scripts.create('MouseLookScript'));
-	scriptComponent.scripts.push(Scripts.create('WASD', {'walkSpeed': 50}));
-	camEntity.setComponent(scriptComponent);
-	camEntity.addToWorld();
-
-	setupOcclusionCulling(goo, camera);
+	setupOcclusionCulling(goo, demoWorld.camera);
 
 	goo.startGameLoop();
 
 	window.addEventListener('keydown', function(e) {
+
+		var material = demoWorld.material;
 
 		
 		if (e.keyCode === ScriptUtils._keys['z']) {
@@ -117,19 +66,10 @@ require([
 		var SOFTWARE_BUFFER_WIDTH = 64;
 		var SOFTWARE_BUFFER_HEIGHT = 32;
 
-
-		// BUFFER VALUES
-		// These values could maybe be read from the meshes loaded. Or just take enough...
-		var maxNumberOfOccluderVertices = 104;
-		var maxTrianglesPerOccluder = 32;
-		var maxNumberOfOccluderIndices = 3 * maxTrianglesPerOccluder;
-
 		var occlusionParameters = {
 			'width': SOFTWARE_BUFFER_WIDTH,
 			'height': SOFTWARE_BUFFER_HEIGHT,
-			'camera': camera,
-			'maxVertCount': maxNumberOfOccluderVertices,
-			'maxIndexCount': maxNumberOfOccluderIndices
+			'camera': camera
 		};
 
 		if (DEBUG === true) {
