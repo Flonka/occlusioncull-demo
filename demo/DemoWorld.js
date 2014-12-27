@@ -63,11 +63,9 @@ function DemoWorld(world) {
 			box.setComponent(new OccluderComponent(boxMeshData));
 			box.addToWorld();
 
-
 			var rotEnt = world.createEntity(iterationPos);
 
 			var sMat = new Material(ShaderLib.simpleColored);
-			//console.debug(sMat.uniforms);
 			sMat.uniforms.color = [Math.random(), Math.random(), Math.random()];
 			var randR = Math.random() * Math.PI * 2
 			var sphereOffset = [boxSize * Math.sin(randR), 0, boxSize * Math.cos(randR)];
@@ -88,7 +86,7 @@ function DemoWorld(world) {
 	camera.lookAt(Vector3.ZERO, Vector3.UNIT_Y);
 	var camEntity = world.createEntity(camera, [0, 0, 10]);
 	var scriptComponent = new ScriptComponent();
-	console.debug("Available scripts: ", Scripts.allScripts());
+	
 	scriptComponent.scripts.push(Scripts.create('MouseLookScript'));
 	scriptComponent.scripts.push(Scripts.create('WASD', {'walkSpeed': 50}));
 	camEntity.setComponent(scriptComponent);
