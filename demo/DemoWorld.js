@@ -1,5 +1,6 @@
 define([
 	'goo/shapes/Box',
+	'goo/shapes/Sphere',
 	'goo/renderer/Material',
 	'goo/renderer/shaders/ShaderLib',
 	'goo/math/Vector3',
@@ -13,6 +14,7 @@ define([
 
 ], function(
 	Box,
+	Sphere,
 	Material,
 	ShaderLib,
 	Vector3,
@@ -36,19 +38,45 @@ function DemoWorld(world) {
 
 	var boxSize = 12
 	var boxMesh = new Box(boxSize, boxSize * 2, boxSize);
+
+	var sSamples = 32;
+	var sRadius = boxSize * 0.2;
+	var sphereMesh = new Sphere(sSamples, sSamples, sRadius, Sphere.TextureModes.Polar);
+
 	var material = new Material(ShaderLib.simpleLit);
-	material.wireframe = false;
+
+	var rotationScript = {
+		run: function(entity, tpf, context, params) {
+			entity.addRotation(0, tpf * 1.2, 0);
+		}
+	};
 
 	var rows = 20;
 	var cols = rows;
 	var offset = boxSize * 2.3;
-	for (var x = 0; x < rows; x++) {
-		for (var z = 0; z < cols; z++) {
-			var box = world.createEntity(boxMesh, material, [x * offset, 0, z * offset]);
+	for (var x = -rows; x < rows; x++) {
+		for (var z = -cols; z < cols; z++) {
+			var iterationPos = [x * offset, 0, z * offset];
+			var box = world.createEntity(boxMesh, material, iterationPos);
 			var boxMeshData = box.meshDataComponent.meshData;
 			box.setComponent(new OccludeeComponent(boxMeshData, true));
 			box.setComponent(new OccluderComponent(boxMeshData));
 			box.addToWorld();
+
+
+			var rotEnt = world.createEntity(iterationPos);
+
+			var sMat = new Material(ShaderLib.simpleColored);
+			//console.debug(sMat.uniforms);
+			sMat.uniforms.color = [Math.random(), Math.random(), Math.random()];
+			var randR = Math.random() * Math.PI * 2
+			var sphereOffset = [boxSize * Math.sin(randR), 0, boxSize * Math.cos(randR)];
+			var sphere = world.createEntity(sphereMesh, sMat, sphereOffset);
+			rotEnt.attachChild(sphere);
+			sphere.setComponent(new OccludeeComponent(sphereMesh, true));
+			rotEnt.addToWorld();
+			rotEnt.setComponent(new ScriptComponent());
+			rotEnt.scriptComponent.scripts.push(rotationScript);
 		}
 	}
 
